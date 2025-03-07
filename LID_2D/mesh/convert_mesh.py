@@ -1,6 +1,5 @@
 import meshio
 import numpy as np
-import festim as F
 
 # Convert mesh to XDMF
 filename = "WCu.msh"

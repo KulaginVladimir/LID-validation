@@ -53,9 +53,6 @@ def get_data(name, folder, Es, rs):
     return fluences
 
 
-folder = "./results4/"
-
-
 """data_1 = get_data_prof("./results_250us_new1/")
 
 plt.plot(
@@ -112,7 +109,7 @@ plt.plot(
     label="Моделирование: 1 мс",
 )"""
 
-data_1 = get_data_prof("./results_1ms_new1/")
+data_1 = get_data_prof("./results_1ms_flat/")
 
 plt.plot(
     data_1[:, 0],
@@ -168,7 +165,7 @@ plt.legend(loc="lower right", fontsize=10)
 )"""
 
 
-# plt.scatter([0.261, 0.351], [1.26933e13, 4.92834e13])
+plt.scatter([0.261, 0.351], [1.26933e13, 4.92834e13])
 
 plt.savefig("Сравнение.png", dpi=500, bbox_inches="tight", pad_inches=0.05)
-# plt.show()
+plt.show()
