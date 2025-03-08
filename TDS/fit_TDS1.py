@@ -4,6 +4,7 @@ from scipy.optimize import minimize
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
+
 def info(i, p):
     """
     Print information during the fitting procedure
@@ -27,7 +28,7 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
         F.DerivedQuantities: the derived quantities of the simulation
     """
     w_atom_density = 6.31e28  # atom/m3
-    D0_W = 1.93e-7/np.sqrt(2)
+    D0_W = 1.93e-7 / np.sqrt(2)
     Ed_W = 0.2
 
     # Define Simulation object
@@ -35,7 +36,7 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
 
     # Define a simple mesh
     vertices = np.linspace(0, 1e-6, num=500)
-    
+
     model.mesh = F.MeshFromVertices(vertices)
 
     # Define material properties
@@ -75,7 +76,6 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
         materials=tungsten,
     )
 
-
     model.traps = [trap_1, trap_2, trap_3]
 
     # Set initial conditions
@@ -86,9 +86,7 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
     ]
 
     # Set boundary conditions
-    model.boundary_conditions = [
-        F.DirichletBC(surfaces=1, value=0, field=0)
-    ]
+    model.boundary_conditions = [F.DirichletBC(surfaces=1, value=0, field=0)]
 
     # Define the material temperature evolution
     ramp = 0.5  # K/s
@@ -117,9 +115,9 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
             F.AverageVolume(field="T", volume=1),
             F.TotalVolume(field="1", volume=1),
             F.TotalVolume(field="2", volume=1),
-            F.TotalVolume(field="3", volume=1)
+            F.TotalVolume(field="3", volume=1),
         ],
-        show_units=True
+        show_units=True,
     )
 
     model.exports = [derived_quantities]
@@ -127,6 +125,7 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
     model.run()
 
     return derived_quantities
+
 
 def error_function(prm):
     """
@@ -145,7 +144,9 @@ def error_function(prm):
     res = TDS(*prm)
 
     T = np.array(res.filter(fields="T").data)
-    flux = -np.array(res.filter(fields="solute", surfaces=1).data) - np.array(res.filter(fields="solute", surfaces=2).data)
+    flux = -np.array(res.filter(fields="solute", surfaces=1).data) - np.array(
+        res.filter(fields="solute", surfaces=2).data
+    )
 
     interp_tds = interp1d(T, flux, fill_value="extrapolate")
 
@@ -158,23 +159,27 @@ def error_function(prm):
         tr3 = np.array(res.filter(fields="3").data)
         time = np.array(res.t)
 
-        dtr1 = -np.diff(tr1)/np.diff(time)
-        dtr2 = -np.diff(tr2)/np.diff(time)
-        dtr3 = -np.diff(tr3)/np.diff(time)
+        dtr1 = -np.diff(tr1) / np.diff(time)
+        dtr2 = -np.diff(tr2) / np.diff(time)
+        dtr3 = -np.diff(tr3) / np.diff(time)
 
-        plt.plot(T, -np.array(res.filter(fields="solute", surfaces=1).data), label="left")
-        plt.plot(T, -np.array(res.filter(fields="solute", surfaces=2).data), label="right")
+        plt.plot(
+            T, -np.array(res.filter(fields="solute", surfaces=1).data), label="left"
+        )
+        plt.plot(
+            T, -np.array(res.filter(fields="solute", surfaces=2).data), label="right"
+        )
 
-        plt.plot(T[1:], dtr1, label="1", ls='dashed')
-        plt.plot(T[1:], dtr2, label="2", ls='dashed')
-        plt.plot(T[1:], dtr3, label="3", ls='dashed')
+        plt.plot(T[1:], dtr1, label="1", ls="dashed")
+        plt.plot(T[1:], dtr2, label="2", ls="dashed")
+        plt.plot(T[1:], dtr3, label="3", ls="dashed")
 
         plt.plot(ref[:, 0], ref[:, 1], linewidth=2, label="Reference")
         plt.legend()
         plt.show()
     print(f"Average absolute error is : {err:.2e}")
     return err
-    
+
 
 ref = np.genfromtxt("./TDS_S160724.csv", delimiter=",", skip_header=1)
 
@@ -199,7 +204,10 @@ predicted_data = TDS(*res.x)
 
 T = predicted_data.filter(fields="T").data
 
-flux = -(np.array(predicted_data.filter(fields="solute", surfaces=1).data) + np.array(predicted_data.filter(fields="solute", surfaces=2).data))
+flux = -(
+    np.array(predicted_data.filter(fields="solute", surfaces=1).data)
+    + np.array(predicted_data.filter(fields="solute", surfaces=2).data)
+)
 
 # Visualise
 plt.plot(ref[:, 0], ref[:, 1], linewidth=2, label="Reference")

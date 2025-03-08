@@ -7,6 +7,7 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import random
 
+
 def info(i, p):
     """
     Print information during the fitting procedure
@@ -30,7 +31,7 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
         F.DerivedQuantities: the derived quantities of the simulation
     """
     w_atom_density = 6.31e28  # atom/m3
-    D0 = 1.93e-7/np.sqrt(2)
+    D0 = 1.93e-7 / np.sqrt(2)
     Ed = 0.2
 
     # Define Simulation object
@@ -85,9 +86,7 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
     ]
 
     # Set boundary conditions
-    model.boundary_conditions = [
-        F.DirichletBC(surfaces=1, value=0, field=0)
-    ]
+    model.boundary_conditions = [F.DirichletBC(surfaces=1, value=0, field=0)]
 
     # Define the material temperature evolution
     ramp = 0.5  # K/s
@@ -115,7 +114,7 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
             F.HydrogenFlux(surface=2),
             F.AverageVolume(field="T", volume=1),
         ],
-        show_units=True
+        show_units=True,
     )
 
     model.exports = [derived_quantities]
@@ -124,22 +123,23 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
 
     return derived_quantities
 
+
 def error_function(prm):
     """
     Compute average absolute error between simulation and reference
     """
 
     # Get the simulation result
-    try: 
+    try:
         res = TDS(*prm)
 
         T = np.array(res.filter(fields="T").data)
         flux = -np.array(res.filter(fields="solute", surfaces=1).data)
 
         # Plot the intermediate TDS spectra
-        #if ITERATION == 0:
+        # if ITERATION == 0:
         #    plt.plot(T, flux, color="tab:red", lw=2, label="Initial guess")
-        #else:
+        # else:
         #    plt.plot(T, flux, color="tab:grey", lw=0.5)
 
         interp_tds = interp1d(T, flux, fill_value="extrapolate")
@@ -151,7 +151,7 @@ def error_function(prm):
         return err
     except:
         return 1e30
-    
+
 
 ref = np.genfromtxt("./TDS_S160724.csv", delimiter=",", skip_header=1)
 
@@ -171,7 +171,15 @@ dimensions = [
     dim_Edt3,
 ]
 
-default_parameters = [0.002617564252438404, 1.234176427898428, 0.021317600436734342, 1.0564506829439768, 0.0065940178872959205, 1.6789668121378427]
+default_parameters = [
+    0.002617564252438404,
+    1.234176427898428,
+    0.021317600436734342,
+    1.0564506829439768,
+    0.0065940178872959205,
+    1.6789668121378427,
+]
+
 
 @use_named_args(dimensions=dimensions)
 def fitness(trap_conc1, Edt1, trap_conc2, Edt2, trap_conc3, Edt3):
@@ -199,7 +207,7 @@ res = gp_minimize(
     acq_func="EI",  # Expected Improvement.
     n_calls=n_calls,
     x0=default_parameters,
-    random_state=random.randint(1,10000),
+    random_state=random.randint(1, 10000),
 )
 
 print(res.x)

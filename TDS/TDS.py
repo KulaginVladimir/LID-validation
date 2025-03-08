@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
 
+
 def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
     """Runs the simulation with parameters p that represent:
 
@@ -16,26 +17,20 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
         F.DerivedQuantities: the derived quantities of the simulation
     """
     w_atom_density = 6.31e28  # atom/m3
-    D0_W = 1.93e-7/np.sqrt(2)
+    D0_W = 1.93e-7 / np.sqrt(2)
     Ed_W = 0.2
 
     # Define Simulation object
     model = F.Simulation()
 
     # Define a simple mesh
-    vertices = np.concatenate([
-        np.linspace(0, 1e-6, num=500)])
-    
+    vertices = np.concatenate([np.linspace(0, 1e-6, num=500)])
+
     model.mesh = F.MeshFromVertices(vertices)
 
     # Define material properties
     tungsten = F.Material(
-        id=1,
-        D_0=D0_W,
-        E_D=Ed_W,
-        S_0=1.87e24,
-        E_S=1.04,
-        borders=[0, 1e-6]
+        id=1, D_0=D0_W, E_D=Ed_W, S_0=1.87e24, E_S=1.04, borders=[0, 1e-6]
     )
 
     model.materials = F.Materials([tungsten])
@@ -78,9 +73,7 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
     ]
 
     # Set boundary conditions
-    model.boundary_conditions = [
-        F.DirichletBC(surfaces=[1], value=0, field=0)
-    ]
+    model.boundary_conditions = [F.DirichletBC(surfaces=[1], value=0, field=0)]
 
     # Define the material temperature evolution
     ramp = 0.5  # K/s
@@ -109,20 +102,32 @@ def TDS(n1, E_p1, n2, E_p2, n3, E_p3):
             F.AverageVolume(field="T", volume=1),
             F.TotalVolume(field="1", volume=1),
         ],
-        show_units=True
+        show_units=True,
     )
 
     XDMF = [
-        F.XDMFExport(field="retention", filename="./res/ret.xdmf", checkpoint=False,),
-        F.XDMFExport(field="solute", filename="./res/mob.xdmf", checkpoint=False,),
-        F.XDMFExport(field="1", filename="./res/1.xdmf", checkpoint=False,),
+        F.XDMFExport(
+            field="retention",
+            filename="./res/ret.xdmf",
+            checkpoint=False,
+        ),
+        F.XDMFExport(
+            field="solute",
+            filename="./res/mob.xdmf",
+            checkpoint=False,
+        ),
+        F.XDMFExport(
+            field="1",
+            filename="./res/1.xdmf",
+            checkpoint=False,
+        ),
     ]
     model.exports = [derived_quantities] + XDMF
     model.initialise()
     model.run()
 
     return derived_quantities
-    
+
 
 ref = np.genfromtxt("./TDS_S160724.csv", delimiter=",", skip_header=1)
 
@@ -137,12 +142,12 @@ T = res.filter(fields="T").data
 tr1 = np.array(res.filter(fields="1").data)
 time = np.array(res.t)
 
-dtr1 = -np.diff(tr1)/np.diff(time)
+dtr1 = -np.diff(tr1) / np.diff(time)
 
 plt.plot(T, -np.array(res.filter(fields="solute", surfaces=1).data), label="left")
 plt.plot(T, -np.array(res.filter(fields="solute", surfaces=2).data), label="right")
 
-plt.plot(T[1:], dtr1, label="1", ls='dashed')
+plt.plot(T[1:], dtr1, label="1", ls="dashed")
 
 plt.plot(ref[:, 0], ref[:, 1], linewidth=2, label="Reference")
 plt.legend()

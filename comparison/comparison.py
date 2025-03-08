@@ -71,24 +71,23 @@ plt.plot(
     label="Моделирование: 170 мкс",
 )
 
-energies = [0.054, 0.078, 0.124, 0.171, 0.216, 0.261, 0.306, 0.351]  # 250 us
-fluences = [
-    0,
-    0,
-    5133716691344.515,
-    18532887681986.27,
-    4502324639571.562,
-    60643751401553.06,
-    59098320981498.01,
-    81554457549307.39,
-]
+data_1 = get_data_prof("./results_250us_upd/")
+
+plt.plot(
+    data_1[:, 0],
+    data_1[:, 1],
+    color="tab:blue",
+    label="Моделирование: 170 мкс",
+)
+
+exp_data = np.loadtxt("../experimental_data/170 us.csv", skiprows=1, delimiter=",")
 
 plt.errorbar(
-    energies,
-    np.array(fluences),
-    yerr=np.array(fluences) * 0.16,
+    exp_data[:, 0],
+    exp_data[:, 1],
+    yerr=exp_data[:, 1] * 0.20,
     fmt="o",
-    markersize=4,
+    markersize=5,
     capsize=6,
     label="Эксперимент: 170 мкс",
     color="tab:green",
@@ -118,23 +117,13 @@ plt.plot(
     label="Моделирование: 1 мс",
 )
 
-exp_data = [
-    0,
-    0,
-    1054478097062.3062,
-    2401476299662.052,
-    1507355677569.9465,
-    6853539178657.508,
-    12628691889725.508,
-    64106569074151.78,
-    239789819543843.44,
-]
-energies = [0.066, 0.16, 0.255, 0.34951, 0.444, 0.53771, 0.636, 0.823, 1.003]
+
+exp_data = np.loadtxt("../experimental_data/1 ms.csv", skiprows=1, delimiter=",")
 
 plt.errorbar(
-    energies,
-    np.array(exp_data),
-    yerr=np.array(exp_data) * 0.16,
+    exp_data[:, 0],
+    exp_data[:, 1],
+    yerr=exp_data[:, 1] * 0.20,
     fmt="o",
     markersize=5,
     capsize=6,
