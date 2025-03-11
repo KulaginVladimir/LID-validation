@@ -139,14 +139,14 @@ plt.plot(
 )"""
 
 
-plt.yscale("log")
+# plt.yscale("log")
 plt.xlim(0.05, 1.05)
 plt.xticks([i / 10 for i in range(0, 11)])
-plt.ylim(1e11, 1e15)
+# plt.ylim(1e11, 1e15)
 plt.ylabel(r"Число десорбированных атомов D")
 plt.xlabel("Энергия лазерного импульса, Дж")
 
-plt.legend(loc="lower right", fontsize=10)
+plt.legend(loc="upper left", fontsize=10)
 
 """plt.scatter(
     [0.16, 0.255, 0.444, 0.53771, 0.636, 0.823, 1.003],
@@ -156,5 +156,5 @@ plt.legend(loc="lower right", fontsize=10)
 
 plt.scatter([0.261, 0.351], [1.26933e13, 4.92834e13])
 
-plt.savefig("Сравнение.png", dpi=500, bbox_inches="tight", pad_inches=0.05)
+# plt.savefig("Сравнение.png", dpi=500, bbox_inches="tight", pad_inches=0.05)
 plt.show()

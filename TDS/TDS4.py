@@ -227,8 +227,8 @@ plt.fill_between(T[1:], np.zeros_like(dtr1), dtr4, alpha=0.15, color="grey")
 plt.ylabel(r"Поток D, м$^{-2}$ м$^{-1}$")
 plt.xlabel(r"Температура, K")
 
-plt.xlim(300, 1000)
-plt.xticks([i for i in range(300, 1100, 100)])
+# plt.xlim(300, 1000)
+# plt.xticks([i for i in range(300, 1100, 100)])
 plt.ylim(0, 6e18)
 plt.legend()
 
