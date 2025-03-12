@@ -35,14 +35,14 @@ triangle_data = np.concatenate(triangle_data_list)
 
 # Create the triangular mesh for the surface
 triangle_mesh = meshio.Mesh(
-    points=msh.points,
+    points=msh.points[:, :2],
     cells=[("triangle", triangle_cells)],
     cell_data={"f": [triangle_data]},
 )
 
 # Create the line mesh for boundaries
 line_mesh = meshio.Mesh(
-    points=msh.points,
+    points=msh.points[:, :2],
     cells=[("line", line_cells)],
     cell_data={"f": [line_data]},
 )

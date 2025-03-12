@@ -10,10 +10,10 @@ L_W = 1e-6
 
 gmsh.model.geo.addPoint(0, 0, 0, 1e-4, 1)  # left bottom Cu node
 gmsh.model.geo.addPoint(R, 0, 0, 1e-4, 2)  # right bottom Cu node
-gmsh.model.geo.addPoint(R, L_Cu, 0, 5e-7, 3)  # right top Cu node
-gmsh.model.geo.addPoint(R, L_Cu + L_W, 0, 5e-7, 4)  # right top W node
-gmsh.model.geo.addPoint(0, L_Cu + L_W, 0, 5e-8, 5)  # left top W node
-gmsh.model.geo.addPoint(0, L_Cu, 0, 5e-7, 6)  # left top Cu node
+gmsh.model.geo.addPoint(R, L_Cu, 0, 1e-6, 3)  # right top Cu node
+gmsh.model.geo.addPoint(R, L_Cu + L_W, 0, 1e-6, 4)  # right top W node
+gmsh.model.geo.addPoint(0, L_Cu + L_W, 0, 5e-9, 5)  # left top W node
+gmsh.model.geo.addPoint(0, L_Cu, 0, 7.5e-8, 6)  # left top Cu node
 
 gmsh.model.geo.addLine(1, 2, 1)
 gmsh.model.geo.addLine(2, 3, 2)
@@ -33,11 +33,11 @@ gmsh.model.geo.synchronize()
 bl = gmsh.model.mesh.field.add("BoundaryLayer")
 gmsh.model.mesh.field.setNumbers(bl, "CurvesList", [4])
 gmsh.model.mesh.field.setNumbers(bl, "PointsList", [4, 5])
-gmsh.model.mesh.field.setNumber(bl, "Size", 5e-8)
-gmsh.model.mesh.field.setNumber(bl, "Ratio", 1.2)
+gmsh.model.mesh.field.setNumber(bl, "Size", 2.5e-9)
+gmsh.model.mesh.field.setNumber(bl, "Ratio", 1.1)
 gmsh.model.mesh.field.setNumber(bl, "Quads", 0)
 gmsh.model.mesh.field.setNumber(bl, "Thickness", 5e-7)
-gmsh.model.mesh.field.setNumber(bl, "SizeFar", 1e-6)
+gmsh.model.mesh.field.setNumber(bl, "SizeFar", 5e-8)
 
 gmsh.model.mesh.field.setAsBoundaryLayer(bl)
 

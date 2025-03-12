@@ -2,7 +2,7 @@ import festim as F
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
-import properties
+import tmp.properties as properties
 
 w_atom_density = 6.31e28  # atom/m3
 
@@ -203,6 +203,14 @@ def run(energy, r):
         [F.HydrogenFlux(surface=1), F.TotalSurface(field="T", surface=1)],
         show_units=True,
     )
+
+    TXT = [
+        F.TXTExport(
+            field="retention",
+            filename=f"retention_{duration}_E{E0:.3f}_r{r:.2e}.txt",
+            times=[final_time],
+        )
+    ]
 
     model.exports = [derived_quantities]
     model.initialise()

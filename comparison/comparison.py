@@ -108,7 +108,7 @@ plt.plot(
     label="Моделирование: 1 мс",
 )"""
 
-data_1 = get_data_prof("./results_1ms_flat/")
+data_1 = get_data_prof("./results_1ms_new1/")
 
 plt.plot(
     data_1[:, 0],
@@ -117,6 +117,23 @@ plt.plot(
     label="Моделирование: 1 мс",
 )
 
+data_1 = get_data_prof("./results_1ms_new2/")
+
+plt.plot(
+    data_1[:, 0],
+    np.array(data_1[:, 1]),
+    color="tab:red",
+    label="Моделирование: 1 мс",
+)
+
+data_1 = get_data_prof("./results_1ms_corrected/")
+
+plt.plot(
+    data_1[:, 0],
+    np.array(data_1[:, 1]),
+    color="black",
+    label="Моделирование: 1 мс",
+)
 
 exp_data = np.loadtxt("../experimental_data/1 ms.csv", skiprows=1, delimiter=",")
 
@@ -139,22 +156,26 @@ plt.plot(
 )"""
 
 
-# plt.yscale("log")
+plt.yscale("log")
 plt.xlim(0.05, 1.05)
 plt.xticks([i / 10 for i in range(0, 11)])
-# plt.ylim(1e11, 1e15)
+plt.ylim(1e11, 1e15)
 plt.ylabel(r"Число десорбированных атомов D")
 plt.xlabel("Энергия лазерного импульса, Дж")
 
-plt.legend(loc="upper left", fontsize=10)
+# plt.legend(loc="upper left", fontsize=10)
 
 """plt.scatter(
     [0.16, 0.255, 0.444, 0.53771, 0.636, 0.823, 1.003],
     [4.77318e09, 5.6266e10, 1.54911e12, 4.63213e12, 1.156e13, 3.60e13, 9.793e13],
 )"""
 
+plt.scatter(
+    [0.16, 0.255, 0.444, 0.53771, 0.636, 0.823, 1.003],
+    [4.77318e09, 1.40969e11, 3.6248e12, 1.0359e13, 2.475e13, 8.76663e13, 2.103e14],
+)
 
 plt.scatter([0.261, 0.351], [1.26933e13, 4.92834e13])
-
+plt.scatter([0.261, 0.351], [1.26933e13, 5.32e13])
 # plt.savefig("Сравнение.png", dpi=500, bbox_inches="tight", pad_inches=0.05)
 plt.show()
