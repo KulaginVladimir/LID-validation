@@ -12,7 +12,11 @@ The repository summaries the scripts to post-process raw experimental data and t
 
 [TDS](./TDS): This folder includes the experimental results of TDS measurements and the script for fitting of the measured spectrum to obtain the trap parameters for LID simulations.
 
-[LID](./LID): This folder is dedicated to LID simulations/
+[LID](./LID): This folder is dedicated to LID simulations: 
+
+> [!WARNING]  
+> Most of the scripts were ran on HPC with Slurm Workload Manager. The presented scripts were adapted for a sequential run on a local machine.
+> For any queries, contact: VVKulagin@mephi.ru
 
   * [LID_1D](./LID/LID_1D): The input scripts for 1D simulations with varying value of the heat load.
   * [LID_1D](./LID/LID_1DD_2DT): The input scripts for 1D simulations of the D transport and 2D modelling of the heat transfer.
