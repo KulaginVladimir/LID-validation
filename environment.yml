@@ -8,7 +8,9 @@ dependencies:
   - numpy<1.25
   - sympy
   - pandas
+  - scipy
+  - h5py
+  - gmsh
+  - meshio
   - pip:
-    - gmsh
-    - meshio
-    - h5py
+    - pypalettes
