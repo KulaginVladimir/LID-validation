@@ -1,8 +1,50 @@
 import festim as F
 import numpy as np
-import sys
 import sympy as sp
 import properties
+import sys
+import fenics as f
+from scipy.interpolate import interp1d
+
+
+class InterpolatedExpression(f.UserExpression):
+    def __init__(self, f):
+        super().__init__()
+        self.f = f
+        self.t = 0
+
+    def eval(self, value, x):
+        value[0] = self.f(self.t)
+
+
+class DirichletBCFromData(F.DirichletBC):
+    def __init__(self, surfaces, f, field):
+        value = InterpolatedExpression(f)
+        super().__init__(surfaces, value, field)
+
+    # override the create_expression method
+    def create_expression(self, T):
+        self.expression = self.value
+
+
+N = float(sys.argv[1])
+N_tot = float(sys.argv[2])
+duration = sys.argv[3]
+
+if duration == "1ms":
+    E_max = 1.003
+    final_time = 1e-1
+    t_max = 1e-3
+    max_stepsize = lambda t: 2.5e-5 if t < 2e-3 else 1e-3
+elif duration == "250us":
+    E_max = 0.351
+    final_time = 1e-2
+    t_max = 1.7e-4
+    max_stepsize = lambda t: 2.5e-6 if t < 5e-4 else 5e-4
+
+
+E0 = E_max * (N - 1) / (N_tot - 1)
+export_times = [t_max, final_time]
 
 w_atom_density = 6.31e28  # atom/m3
 
@@ -18,85 +60,16 @@ E_p4 = 1.81760592
 D0_W = 1.93e-7 / np.sqrt(2)
 Ed_W = 0.2
 
-N = float(sys.argv[1])
-N_tot = float(sys.argv[2])
 
-E0 = 1.003 * (N - 1) / (N_tot - 1)  # 1 ms
-# E0 = 0.351 * (N-1)/(N_tot-1)
-
-duration = sys.argv[3]
-
-if duration == "1ms":
-    final_time = 1e-1
-    t_max = 1e-3
-    max_stepsize = lambda t: 2.5e-5 if t < 2.5e-3 else 1e-3
-elif duration == "250us":
-    final_time = 1e-2
-    t_max = 1.7e-4
-    max_stepsize = lambda t: 5e-6 if t < 5e-4 else 5e-4
-
-export_times = [t_max, final_time]
-
-
-def rad(T, _):
-    return -5.670374419e-8 * (T**4 - 300**4)
-
-
-def pulse(t, r):
-    FWHM = 1e-3
-    sigma_r = FWHM / 2 / np.sqrt(2 * np.log(2))
-
-    time_profile = {
-        "1ms": [
-            2.00546391e-04,
-            1.01122930e-03,
-            3.38692875e-07,
-            3.23973615e-02,
-            1.97812839e-04,
-            # 1.08923e-03,
-            910e-6,
-        ],
-        "250us": [
-            1.15673171e-04,
-            2.19229191e-04,
-            3.71988035e-06,
-            1.89739539e-02,
-            1.82511663e-05,
-            1.78315e-04,
-            1.5e-4,
-        ],
-    }
-    t1, t2, dt1, delta, dt2, norm = time_profile[duration]
-
-    f1 = lambda t: 1 / (1 + sp.exp(-(t - 0.5 * t1) / dt1))
-    f2 = lambda t: 1 - delta * (t - t1) / (t2 - t1)
-    f3 = lambda t: sp.exp(-(t - t2) / dt2)
-
-    return (
-        E0
-        * sp.exp(-(r**2) / 2 / sigma_r**2)
-        / 2
-        / np.pi
-        / sigma_r**2
-        * sp.Piecewise(
-            (f1(t), t <= t1),
-            (f1(t1) * f2(t), (t > t1) & (t <= t2)),
-            # (f1(t1) * f2(t2) * f3(t), True),
-            (f1(t1) * f2(t2) * f3(t), True),
-        )
-        / norm
-    )
-
-
-def run(r):
+def run(r, T_int, export_times):
     # Define Simulation object
     model = F.Simulation(log_level=40)
 
     # Define a simple mesh
     vertices = np.concatenate(
         [
-            np.linspace(0, 1e-6, num=1000),
-            np.linspace(1e-6, 1e-4, num=500),
+            np.linspace(0, 1.1e-6, num=1000),
+            np.linspace(1.1e-6, 1e-4, num=500),
             np.linspace(1e-4, 6e-3 + 1e-6, num=500),
         ]
     )
@@ -182,10 +155,8 @@ def run(r):
 
     # Set boundary conditions
     model.boundary_conditions = [
-        F.DirichletBC(surfaces=[1, 2], value=0, field="solute"),
-        F.FluxBC(surfaces=1, value=pulse(F.t, r), field="T"),
-        F.CustomFlux(surfaces=1, field="T", function=rad),
-        F.CustomFlux(surfaces=2, field="T", function=rad),
+        F.DirichletBC(surfaces=1, value=0, field="solute"),
+        DirichletBCFromData(surfaces=1, field="T", f=T_int),
     ]
 
     # Define the material temperature evolution
@@ -207,11 +178,27 @@ def run(r):
 
     model.settings = F.Settings(
         absolute_tolerance=1e12,
-        relative_tolerance=1e-9,
+        relative_tolerance=1e-8,
         final_time=final_time,
         soret=True,
+        # chemical_pot=True,
         traps_element_type="DG",
     )
+
+    TXT = [
+        F.TXTExport(
+            field="retention",
+            filename=f"../results_{duration}/retention_{duration}_E{E0:.3f}_r{r:.3e}.txt",
+            times=export_times,
+            write_at_last=True,
+        ),
+        F.TXTExport(
+            field="T",
+            filename=f"../results_{duration}/T_{duration}_E{E0:.3f}_r{r:.3e}.txt",
+            times=export_times,
+            write_at_last=True,
+        ),
+    ]
 
     # Define the exports
     derived_quantities = F.DerivedQuantities(
@@ -219,39 +206,37 @@ def run(r):
             F.HydrogenFlux(surface=1),
             F.TotalVolume(field="retention", volume=1),
         ],
-        # filename=f"/mnt/pool/6/vvkulagin/FESTIM/LID_validation/LID_1D/results_{duration}_1D/flux_{duration}_E{E0:.3f}_r{r:.2e}.csv",
         show_units=True,
     )
+    model.exports = [derived_quantities]
 
-    TXT = [
-        F.TXTExport(
-            field="retention",
-            filename=f"/mnt/pool/6/vvkulagin/FESTIM/LID_validation/LID_1D/results_{duration}_1D/retention_{duration}_E{E0:.3f}_r{r:.2e}.txt",
-            times=export_times,
-        ),
-        F.TXTExport(
-            field="T",
-            filename=f"/mnt/pool/6/vvkulagin/FESTIM/LID_validation/LID_1D/results_{duration}_1D/T_{duration}_E{E0:.3f}_r{r:.2e}.txt",
-            times=export_times,
-        ),
-    ]
+    if E0 == 1.003:
+        model.exports += TXT
 
-    model.exports = [derived_quantities] + TXT
     model.initialise()
     model.run()
-
     return derived_quantities
 
 
-rs = np.linspace(0, 1.5e-3, 50, endpoint=True)
+rs = np.linspace(0, 1.5e-3, 62, endpoint=True)
 
-fluxes = np.zeros_like(rs)
+# rets_in = np.zeros_like(rs)
 rets_fin = np.zeros_like(rs)
 
-for i, r in enumerate(rs):
-    print(f"Iteration {i}: r={r/1e-3:.2e} mm")
+T_surf = np.loadtxt(
+    f"/mnt/pool/6/vvkulagin/FESTIM/LID_validation/T_2D/T_{duration}/Trz_E{E0:.3f}.csv",  # path to the file produced by T_2D.py
+    skiprows=1,
+    delimiter=",",
+)
 
-    data = run(r)
+fluxes = np.zeros_like(rs)
+
+for i, r in enumerate(rs):
+    print(f"Iteration {i}: r={r/1e-3:.3e} mm")
+
+    T_int = interp1d(T_surf[:, 0], T_surf[:, i + 1])
+
+    data = run(r, T_int, export_times)
 
     flux = -np.array(data[0].data)
     t = np.array(data.t)
@@ -261,13 +246,16 @@ for i, r in enumerate(rs):
 
     rets_fin[i] = retention[-1]
 
+# initial_retention = np.trapz(2*np.pi*rs*rets_in, x=rs)
+final_retention = np.trapz(2 * np.pi * rs * rets_fin, x=rs)
+
 des = np.trapz(2 * np.pi * rs * fluxes, x=rs)
 
 export = np.column_stack([rs.transpose(), rets_fin.transpose()])
 header = f"E={E0:.3f},Desorbed={des},ExportTimes={export_times}"
 
 np.savetxt(
-    f"../results_{duration}_1D/profiles_{duration}_E{E0:.3f}.txt",
+    f"../results_{duration}/profiles_{duration}_E{E0:.3f}.txt",
     export,
     header=header,
     delimiter=",",

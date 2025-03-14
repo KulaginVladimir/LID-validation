@@ -23,6 +23,6 @@ cp -rf properties.py ./${name}
 cp -rf ./mesh ./${name}/mesh
 cd ${name}
 
-mpirun -np 8 python3 2DL.py ${E}
+mpirun -np 8 python3 2DL.py ${E} ${duration}
 
 rm -rf ./cache

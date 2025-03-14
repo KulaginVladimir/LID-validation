@@ -5,28 +5,29 @@ import properties
 import sys
 
 E0 = float(sys.argv[1])
-duration = "1ms"
+duration = sys.argv[2]
 
 if duration == "1ms":
     final_time = 1e-3
     max_stepsize = lambda t: 2.5e-5 if t < 2e-3 else 1e-3
 elif duration == "250us":
     final_time = 1e-2
-    max_stepsize = lambda t: 2e-6 if t < 4e-4 else 5e-4  
+    max_stepsize = lambda t: 2e-6 if t < 4e-4 else 5e-4
+
 
 def pulse(r, t):
     FWHM = 1e-3
-    sigma_r = FWHM / 2 / np.sqrt(2*np.log(2))
+    sigma_r = FWHM / 2 / np.sqrt(2 * np.log(2))
 
     time_profile = {
-        "1ms":[
+        "1ms": [
             2.00546391e-04,
             1.01122930e-03,
             3.38692875e-07,
             3.23973615e-02,
             1.97812839e-04,
-            #1.08923e-03,
-            910e-6
+            # 1.08923e-03,
+            910e-6,
         ],
         "250us": [
             1.15673171e-04,
@@ -34,20 +35,27 @@ def pulse(r, t):
             3.71988035e-06,
             1.89739539e-02,
             1.82511663e-05,
-            #1.78315e-04,
-            1.2665e-4,
+            # 1.78315e-04,
+            # 1.2665e-4,
+            1.5e-4,
         ],
     }
     t1, t2, dt1, delta, dt2, norm = time_profile[duration]
 
-    f1 = lambda t: 1 / (1 + sp.exp(-(t-0.5*t1)/dt1))
-    f2 = lambda t: 1 - delta * (t-t1)/(t2-t1)
-    f3 = lambda t: sp.exp(-(t-t2)/dt2)
+    f1 = lambda t: 1 / (1 + sp.exp(-(t - 0.5 * t1) / dt1))
+    f2 = lambda t: 1 - delta * (t - t1) / (t2 - t1)
+    f3 = lambda t: sp.exp(-(t - t2) / dt2)
 
-    return E0 * sp.exp(-r**2 / 2 / sigma_r**2) / 2 / np.pi / sigma_r**2 * (1/norm) * sp.Piecewise(
-        (f1(t), t <= t1),
-        (f1(t1)*f2(t), (t > t1) & (t <= t2)),
-        (0, True)
+    return (
+        E0
+        * sp.exp(-(r**2) / 2 / sigma_r**2)
+        / 2
+        / np.pi
+        / sigma_r**2
+        * (1 / norm)
+        * sp.Piecewise(
+            (f1(t), t <= t1), (f1(t1) * f2(t), (t > t1) & (t <= t2)), (0, True)
+        )
     )
 
 
@@ -136,7 +144,7 @@ trap_4 = F.Trap(
     materials=tungsten,
 )
 
-model.traps = [trap_1 , trap_2, trap_3, trap_4]
+model.traps = [trap_1, trap_2, trap_3, trap_4]
 
 model.initial_conditions = [
     F.InitialCondition(field="1", value=n1 * sp.Piecewise((1, F.y > 6e-3), (0, True))),
@@ -148,7 +156,7 @@ model.initial_conditions = [
 # Set boundary conditions
 model.boundary_conditions = [
     F.FluxBC(surfaces=6, value=pulse(F.x, F.t), field="T"),
-    F.CustomFlux(surfaces=[3,6], field="T", function=rad),
+    F.CustomFlux(surfaces=[3, 6], field="T", function=rad),
     F.DirichletBC(surfaces=6, value=0, field=0),
 ]
 
@@ -165,7 +173,7 @@ model.T = F.HeatTransferProblem(
 model.dt = F.Stepsize(
     initial_value=5e-7,
     stepsize_change_ratio=1.1,
-    max_stepsize = max_stepsize,
+    max_stepsize=max_stepsize,
     dt_min=1e-8,
 )
 
@@ -191,7 +199,11 @@ derived_quantities = F.DerivedQuantities(
 
 XDMF = [
     F.XDMFExport(
-        field="T", filename=f"/mnt/pool/6/vvkulagin/results_2D/{duration}_E{E0:.3f}/T.xdmf", checkpoint=True, label="T", mode="last"
+        field="T",
+        filename=f"/mnt/pool/6/vvkulagin/results_2D/{duration}_E{E0:.3f}/T.xdmf",
+        checkpoint=True,
+        label="T",
+        mode="last",
     ),
     F.XDMFExport(
         field="retention",
